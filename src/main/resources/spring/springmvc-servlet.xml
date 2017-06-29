@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
+   
+	<context:component-scan base-package="com.java.xdd.web.controller"/>
+
+	<mvc:annotation-driven/>
+
+	<!-- 开启aop，对类代理 -->
+	<aop:config proxy-target-class="true"/>
+	
+	<!--
+		根据客户端的不同的请求决定不同的view进行响应, 如 /rest/1.json /rest/1.xml /rest?format=json
+		/rest?format=xml
+	-->
+	<!-- 多视图管理 -->
+	<bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+		<!-- 设置为true以忽略对Accept Header的支持-->
+		<property name="ignoreAcceptHeader" value="true" />
+		<!-- true，开启扩展名支持，false关闭支持，即.json结尾则返回json数据 -->
+		<property name="favorPathExtension" value="true" />
+		<!-- 用于开启 /userInfo/123?format=json的支持，则返回json数据 -->
+		<!--<property name="favorParameter" value="true" />-->
+		<!-- 上一个属性配置为true,我们指定type请求参数判断MIME类型 -->
+		<!--<property name="parameterName" value="type"/>-->
+		<!-- 在没有扩展名和参数时即: "/user/1" 时的默认展现形式 -->
+		<property name="defaultContentType" value="text/html" />
+		<!--
+			参数值至mimeType的映射,即 /rest?format=json json是key，application/json就是value
+			支持json和xml等
+		-->
+		<property name="mediaTypes">
+			<map>
+				<!-- 根据路径后缀，告诉视图解析器，返回的类型为数据格式 -->
+				<entry key="html" value="text/html" />
+				<entry key="jsp" value="text/html" />
+				<entry key="xml" value="application/xml" />
+				<entry key="json" value="application/json" />
+				<entry key="excel" value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+				<entry key="pdf" value="application/pdf" />
+			</map>
+		</property>
+	</bean>
+
+	<!-- 多视图解析(返回pdf、json、xml、excel、view) -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="1"/>
+		<property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+		<!-- 视图解析器 -->
+		<!--<property name="viewResolvers">
+			<list>
+				<ref bean="viewResolver"/>
+				<ref bean="pdfResolver"/>
+				<ref bean="excelResolver"/>
+			</list>
+		</property>-->
+		<!-- 默认视图 -->
+		<property name="defaultViews">
+			<list>
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+					<constructor-arg index="0" ref="objectMapper"/>
+				</bean>
+				<ref bean="pdfView"/>
+				<ref bean="excelView"/>
+				<!--<ref bean="xmlView"/>-->
+				<bean class="org.springframework.web.servlet.view.xml.MappingJackson2XmlView"/>
+			</list>
+		</property>
+	</bean>
+
+	<!-- pdf视图 -->
+	<bean id="pdfView" class="com.java.xdd.springmvc.config.view.PdfView"/>
+	<!--excel视图-->
+	<bean id="excelView" class="com.java.xdd.springmvc.config.view.ExcelView"/>
+
+	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+
+	<bean id="xmlView" class="org.springframework.web.servlet.view.xml.MarshallingView">
+		<constructor-arg index="0">
+			<bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+				<property name="packagesToScan" value="com.java.xdd.web"/>
+			</bean>
+		</constructor-arg>
+	</bean>
+	<!-- 将模型数据转换为XML格式 -->
+
+
+	<!-- freemarker 配置属性 -->
+	<bean id="freemarkerConfig"
+		  class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF/ftl/" />
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="template_update_delay">0</prop>
+				<prop key="default_encoding">UTF-8</prop>
+				<prop key="number_format">0.##########</prop>
+				<prop key="datetime_format">${datetime.format}</prop>
+				<prop key="classic_compatible">true</prop>
+				<prop key="template_exception_handler">ignore</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 上传 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8"/><!--默认编码-->
+		<property name="maxUploadSize" value="10485760000"/><!--文件大小限制-->
+		<property name="maxInMemorySize" value="40960"/>
+	</bean>
+
+
+	<!-- 针对freemarker的视图配置 -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<property name="order" value="5" />
+		<property name="suffix" value=".ftl" />
+		<property name="contentType" value="text/html;charset=UTF-8" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+	</bean>
+
+	<!-- pdf视图解析器 -->
+	<bean id="pdfResolver" class="com.java.xdd.springmvc.config.resolver.PdfViewResolver"/>
+
+	<!-- excel视图解析器 -->
+	<bean id="excelResolver" class="com.java.xdd.springmvc.config.resolver.ExcelResolver"/>
+
+</beans>
