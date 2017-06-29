@@ -69,9 +69,7 @@
 		<!-- 默认视图 -->
 		<property name="defaultViews">
 			<list>
-				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
-					<constructor-arg index="0" ref="objectMapper"/>
-				</bean>
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
 				<ref bean="pdfView"/>
 				<ref bean="excelView"/>
 				<!--<ref bean="xmlView"/>-->
@@ -85,15 +83,15 @@
 	<!--excel视图-->
 	<bean id="excelView" class="com.java.xdd.springmvc.config.view.ExcelView"/>
 
-	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+	<!--<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>-->
 
-	<bean id="xmlView" class="org.springframework.web.servlet.view.xml.MarshallingView">
+	<!--<bean id="xmlView" class="org.springframework.web.servlet.view.xml.MarshallingView">
 		<constructor-arg index="0">
 			<bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
 				<property name="packagesToScan" value="com.java.xdd.web"/>
 			</bean>
 		</constructor-arg>
-	</bean>
+	</bean>-->
 	<!-- 将模型数据转换为XML格式 -->
 
 
@@ -130,9 +128,9 @@
 	</bean>
 
 	<!-- pdf视图解析器 -->
-	<bean id="pdfResolver" class="com.java.xdd.springmvc.config.resolver.PdfViewResolver"/>
+	<!--<bean id="pdfResolver" class="com.java.xdd.springmvc.config.resolver.PdfViewResolver"/>-->
 
 	<!-- excel视图解析器 -->
-	<bean id="excelResolver" class="com.java.xdd.springmvc.config.resolver.ExcelResolver"/>
+	<!--<bean id="excelResolver" class="com.java.xdd.springmvc.config.resolver.ExcelResolver"/>-->
 
 </beans>
