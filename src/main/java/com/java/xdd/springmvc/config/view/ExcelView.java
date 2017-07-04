@@ -53,5 +53,8 @@ public class ExcelView extends AbstractXlsxView {
         for (int i = 0; i < 3; i++) {
             sheet.autoSizeColumn(i, true);
         }
+
+        //设置excel下载名称
+        response.addHeader("Content-Disposition", "attachment;filename=abc.xlsx");
     }
 }
